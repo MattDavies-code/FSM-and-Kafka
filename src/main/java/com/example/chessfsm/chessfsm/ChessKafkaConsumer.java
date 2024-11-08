@@ -2,8 +2,12 @@ package com.example.chessfsm.chessfsm;
 
 import com.example.chessfsm.chessfsm.fsm.ChessFSM;
 import com.example.chessfsm.chessfsm.fsm.ChessBoard;
+import com.example.chessfsm.chessfsm.fsm.MoveValidation;
 import com.example.chessfsm.chessfsm.fsm.Position;
 
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -16,30 +20,49 @@ public class ChessKafkaConsumer {
 
     private final ChessFSM fsm;
     private final ChessBoard board;
+    private final ObjectMapper objectMapper;
+    private final MoveValidation moveValidation;
 
     @Autowired
-    public ChessKafkaConsumer(ChessFSM fsm, ChessBoard board) {
+    public ChessKafkaConsumer(ChessFSM fsm, ChessBoard board, ObjectMapper objectMapper, MoveValidation moveValidation) {
         this.fsm = fsm;
         this.board = board;
+        this.objectMapper = objectMapper;
+        this.moveValidation = moveValidation;
     }
 
     @KafkaListener(topics = "chess-moves", groupId = "chess-fsm-group")
     public void consume(String message) {
-        // Parse the move message (implementation for parsing JSON depends on JSON library)
-        String playerColor = "white"; // Placeholder, should parse from message
-        Position from = new Position("A2"); // Placeholder, should parse from message
-        Position to = new Position("A3"); // Placeholder, should parse from message
+        try {
+            // Parse the JSON message
+            JsonNode moveJson = objectMapper.readTree(message);
+            String playerColor = moveJson.get("player").asText();
+            Position from = new Position(moveJson.get("from").asText());
+            Position to = new Position(moveJson.get("to").asText());
 
-        // Validate the move
-        boolean isValid = board.isMoveValid(from, to, playerColor);
-        if (isValid) {
-            System.out.println("Valid move for " + playerColor + ": " + from + " to " + to);
-            board.movePiece(from, to); // Update board state in Redis
-            fsm.checkForSpecialConditions(false, false, false); // Placeholder for actual conditions
-        } else {
-            System.out.println("Invalid move. Move rejected.");
+            // Validate the move
+            if (moveValidation.isMoveValid(from, to, playerColor)) {
+                // Move is valid, perform the move and update state
+                chessBoard.movePiece(from, to);
+                fsm.transition("move");
+
+                // Output the current game state as JSON
+                sendGameState();
+            } else {
+                System.out.println("Invalid move or move rejected.");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to process move message: " + e.getMessage());
         }
+        board.printBoard();
+    }
 
-        System.out.println("Current game state: " + fsm.getCurrentState());
+    public void sendGameState() throws Exception {
+        // Create the JSON representation of the game state
+        GameState gameState = new GameState(fsm.getCurrentState(), board.getAllPositions());
+        String gameStateJson = objectMapper.writeValueAsString(gameState);
+
+        // Output the game state JSON or send to another Kafka topic
+        System.out.println("Game State JSON: " + gameStateJson);
     }
 }

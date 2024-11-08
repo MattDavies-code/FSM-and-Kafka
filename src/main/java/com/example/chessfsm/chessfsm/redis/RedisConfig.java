@@ -1,4 +1,4 @@
-package com.example.chessfsm.chessfsm;
+package com.example.chessfsm.chessfsm.redis;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

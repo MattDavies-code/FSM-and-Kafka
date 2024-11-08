@@ -1,9 +1,12 @@
 package com.example.chessfsm.chessfsm.redis;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
+
+import java.util.Map;
 
 @Repository
 public class ChessBoardRepository {
@@ -34,5 +37,9 @@ public class ChessBoardRepository {
 
     public void clearBoard() {
         redisTemplate.delete(BOARD_KEY);
+    }
+
+    public Map<String, String> getAllPositions() {
+        return hashOperations.entries(BOARD_KEY);
     }
 }

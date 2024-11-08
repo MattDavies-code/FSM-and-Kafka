@@ -1,6 +1,6 @@
 package com.example.chessfsm.chessfsm.fsm;
 
-//Converts a chess board position in algebraic notation to a Position object
+//Converts a chess board position in rank and file notation to a Position object
 public class Position {
     private final char file; // A to H
     private final int rank;  // 1 to 8
