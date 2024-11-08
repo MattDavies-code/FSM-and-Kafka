@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Map;
+
 @Service
 public class ChessKafkaConsumer {
 
@@ -65,7 +67,7 @@ public class ChessKafkaConsumer {
                 }
 
                 // Output the current game state as JSON
-                sendGameState();
+                sendGameState(playerColor, from, to);
             } else {
                 System.out.println("Invalid move or move rejected.");
             }
@@ -75,12 +77,27 @@ public class ChessKafkaConsumer {
         board.printBoard();
     }
 
-    public void sendGameState() throws Exception {
-        // Create the JSON representation of the game state
-        GameState gameState = new GameState(fsm.getCurrentState(), board.getAllPositions());
+    public void sendGameState(String playerColor, Position from, Position to) throws Exception {
+        // Get the current state of the FSM
+        String currentState = fsm.getCurrentState();
+
+        // Get the current board positions and pieces
+        Map<String, String> boardState = board.getAllPositions();
+
+        // Determine the opponent's turn as the next turn
+        String nextTurn = stateChecker.opponentColour(playerColor);
+
+        // Get details of the last move
+        String piece = board.getPieceAt(from);  // Assuming `getPieceAt(Position position)` returns the piece name
+        GameState.LastMove lastMove = new GameState.LastMove(piece, from.toString(), to.toString());
+
+        // Create the GameState object
+        GameState gameState = new GameState(currentState, boardState, nextTurn, lastMove);
+
+        // Convert GameState to JSON
         String gameStateJson = objectMapper.writeValueAsString(gameState);
 
-        // Output the game state JSON or send to another Kafka topic
+        // Output the game state JSON (you could also send it to another Kafka topic if needed)
         System.out.println("Game State JSON: " + gameStateJson);
     }
 }
