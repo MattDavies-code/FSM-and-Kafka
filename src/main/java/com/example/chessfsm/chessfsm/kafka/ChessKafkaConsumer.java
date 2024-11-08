@@ -1,9 +1,11 @@
-package com.example.chessfsm.chessfsm;
+package com.example.chessfsm.chessfsm.kafka;
 
+import com.example.chessfsm.chessfsm.fsm.StateChecker;
+import com.example.chessfsm.chessfsm.model.GameState;
 import com.example.chessfsm.chessfsm.fsm.ChessFSM;
 import com.example.chessfsm.chessfsm.fsm.ChessBoard;
 import com.example.chessfsm.chessfsm.fsm.MoveValidation;
-import com.example.chessfsm.chessfsm.fsm.Position;
+import com.example.chessfsm.chessfsm.model.Position;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,8 +14,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Service;
 
 @Service
 public class ChessKafkaConsumer {
@@ -22,13 +22,15 @@ public class ChessKafkaConsumer {
     private final ChessBoard board;
     private final ObjectMapper objectMapper;
     private final MoveValidation moveValidation;
+    private final StateChecker stateChecker;
 
     @Autowired
-    public ChessKafkaConsumer(ChessFSM fsm, ChessBoard board, ObjectMapper objectMapper, MoveValidation moveValidation) {
+    public ChessKafkaConsumer(ChessFSM fsm, ChessBoard board, ObjectMapper objectMapper, MoveValidation moveValidation, StateChecker stateChecker) {
         this.fsm = fsm;
         this.board = board;
         this.objectMapper = objectMapper;
         this.moveValidation = moveValidation;
+        this.stateChecker = stateChecker;
     }
 
     @KafkaListener(topics = "chess-moves", groupId = "chess-fsm-group")
@@ -43,8 +45,24 @@ public class ChessKafkaConsumer {
             // Validate the move
             if (moveValidation.isMoveValid(from, to, playerColor)) {
                 // Move is valid, perform the move and update state
-                chessBoard.movePiece(from, to);
-                fsm.transition("move");
+                board.movePiece(from, to);
+
+                // Check for game conditions: check, checkmate, stalemate
+                String opponentColour = stateChecker.opponentColour(playerColor);
+                if (stateChecker.isKingInCheck(opponentColour)) {
+                    if (stateChecker.isCheckmate(opponentColour)) {
+                        fsm.transition("CHECKMATE");
+                        System.out.println("Checkmate. " + playerColor + " wins");
+                    } else {
+                        fsm.transition("CHECK");
+                        System.out.println("Check on " + opponentColour + "'s king");
+                    }
+                } else if (stateChecker.isStalemate(opponentColour)) {
+                    fsm.transition("STALEMATE");
+                    System.out.println("Stalemate. The game is a draw.");
+                } else {
+                    fsm.transition("IN_PLAY"); // No special condition, continue game
+                }
 
                 // Output the current game state as JSON
                 sendGameState();

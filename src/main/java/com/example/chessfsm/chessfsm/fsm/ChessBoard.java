@@ -1,24 +1,29 @@
 package com.example.chessfsm.chessfsm.fsm;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.example.chessfsm.chessfsm.redis.ChessBoardRepository;
+
+import com.example.chessfsm.chessfsm.model.GameConfig;
+import com.example.chessfsm.chessfsm.model.Position;
+import com.example.chessfsm.chessfsm.service.ChessBoardRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.swing.plaf.nimbus.State;
 
 @Component
 public class ChessBoard {
 
     private final ChessBoardRepository boardRepository;
+    private final GameConfig gameConfig;
+    private final MoveValidation moveValidator;
 
     @Autowired
-    public ChessBoard(ChessBoardRepository boardRepository) {
+    public ChessBoard(ChessBoardRepository boardRepository, GameConfig gameConfig, MoveValidation moveValidator) {
         this.boardRepository = boardRepository;
+        this.gameConfig = gameConfig;
+        this.moveValidator = moveValidator;
+
         initializeBoard();
     }
 
@@ -107,7 +112,7 @@ public class ChessBoard {
 
     public List<Position> getAllValidMoves(Position from, String playerColor) {
         List<Position> validMoves = new ArrayList<>();
-        MoveValidation moveValidator = new MoveValidation(this); // Assuming MoveValidation uses ChessBoard
+        MoveValidation moveValidator = new MoveValidation(this, gameConfig);
 
         for (char file = 'A'; file <= 'H'; file++) {
             for (int rank = 1; rank <= 8; rank++) {
@@ -130,7 +135,7 @@ public class ChessBoard {
         boardRepository.deletePosition(from.toString());
 
         // Check if the king is in check after the move
-        boolean isKingSafe = !new StateChecker(this).isKingInCheck(playerColor);
+        boolean isKingSafe = !new StateChecker(this, moveValidator).isKingInCheck(playerColor);
 
         // Undo the simulated move in Redis
         boardRepository.savePosition(from.toString(), pieceAtFrom);

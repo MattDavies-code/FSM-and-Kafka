@@ -1,4 +1,4 @@
-package com.example.chessfsm.chessfsm.fsm;
+package com.example.chessfsm.chessfsm.model;
 
 //Converts a chess board position in rank and file notation to a Position object
 public class Position {

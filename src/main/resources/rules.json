@@ -3,9 +3,9 @@
   "transitions": [
     {"from": "START", "to": "IN_PROGRESS", "on": "first_move"},
     {"from": "IN_PROGRESS", "to": "CHECK", "on": "king_in_check"},
-    {"from": "CHECK", "to": "IN_PLAY", "on": "resolve_check"},
-    {"from": "IN_PLAY", "to": "CHECKMATE", "on": "checkmate"},
-    {"from": "IN_PLAY", "to": "STALEMATE", "on": "stalemate"}
+    {"from": "CHECK", "to": "IN_PROGRESS", "on": "resolve_check"},
+    {"from": "IN_PROGRESS", "to": "CHECKMATE", "on": "checkmate"},
+    {"from": "IN_PROGRESS", "to": "STALEMATE", "on": "stalemate"}
   ],
   "rules": {
     "pawn": {"moves": [{"direction": "forward", "steps": 1, "initial": false}, {"direction": "forward", "steps": 2, "initial": true}]},

@@ -1,6 +1,5 @@
-package com.example.chessfsm.chessfsm.redis;
+package com.example.chessfsm.chessfsm.service;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;

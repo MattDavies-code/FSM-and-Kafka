@@ -1,11 +1,14 @@
-package com.example.chessfsm.chessfsm;
+package com.example.chessfsm.chessfsm.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Configuration;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@Configuration
 public class GameConfig {
     public List<String> states;
     public List<Transition> transitions;

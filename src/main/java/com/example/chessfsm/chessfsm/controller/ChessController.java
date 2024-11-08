@@ -1,5 +1,6 @@
-package com.example.chessfsm.chessfsm;
+package com.example.chessfsm.chessfsm.controller;
 
+import com.example.chessfsm.chessfsm.kafka.ChessKafkaProducer;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

@@ -1,4 +1,4 @@
-package com.example.chessfsm.chessfsm;
+package com.example.chessfsm.chessfsm.kafka;
 
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
