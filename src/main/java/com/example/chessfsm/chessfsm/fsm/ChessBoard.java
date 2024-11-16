@@ -5,29 +5,31 @@ import java.util.List;
 import java.util.Map;
 
 import com.example.chessfsm.chessfsm.model.GameConfig;
+import com.example.chessfsm.chessfsm.model.GameState;
 import com.example.chessfsm.chessfsm.model.Position;
 import com.example.chessfsm.chessfsm.service.ChessBoardRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+/**
+ChessBoard class is responsible for managing the state of the chess board.
+**/
 @Component
 public class ChessBoard {
 
     private final ChessBoardRepository boardRepository;
-    private final GameConfig gameConfig;
-    private final MoveValidation moveValidator;
+    private final ChessFSM fsm;
+    private int moveCount; // Keeps track of the total number of moves made
+    private GameState.LastMove lastMove; // Stores details of the last move made
 
-    @Autowired
-    public ChessBoard(ChessBoardRepository boardRepository, GameConfig gameConfig, MoveValidation moveValidator) {
+    public ChessBoard(ChessBoardRepository boardRepository, ChessFSM fsm) {
         this.boardRepository = boardRepository;
-        this.gameConfig = gameConfig;
-        this.moveValidator = moveValidator;
+        this.fsm = fsm;
 
-        initializeBoard();
     }
-
-    private void initializeBoard() {
+    public void initializeBoard() {
         // Initialize white pieces
         boardRepository.savePosition("A1", "white rook");
         boardRepository.savePosition("B1", "white knight");
@@ -59,92 +61,93 @@ public class ChessBoard {
         }
     }
 
+    /**
+     * Retrieve the current state of the board as a Map.
+     * Key: Position (e.g., "A2"), Value: Piece (e.g., "white pawn").
+     */
+    public Map<String, String> getAllPositions() {
+        return boardRepository.getAllPositions();
+    }
+
+    /**
+     * Move a piece from one position to another.
+     */
+    public void movePiece(Position from, Position to) {
+        String piece = boardRepository.getPieceAt(from.toString());
+        if (piece != null) {
+            System.out.println("Moving piece: " + piece + " from " + from + " to " + to);
+            boardRepository.deletePosition(from.toString()); // Clear the old position
+            boardRepository.savePosition(to.toString(), piece); // Place the piece in the new position
+        } else {
+            System.err.println("No piece found at " + from);
+        }
+    }
+
+    /**
+     * Get the piece at a specific position.
+     */
+    public String getPieceAt(Position position) {
+        return boardRepository.getPieceAt(position.toString());
+    }
+
+
+    public void recordLastMove(String piece, String from, String to) {
+        this.lastMove = new GameState.LastMove(piece, from, to);
+    }
+
+    // Get the current game state dynamically
+    public GameState getCurrentGameState(ChessFSM fsm) {
+        // Fetch the current FSM state
+        String currentState = fsm.getCurrentState();
+
+        // Get the current turn dynamically based on move count
+        String currentTurn = (moveCount % 2 == 0) ? "white" : "black";
+
+        // Return the GameState object
+        return new GameState(currentState, getAllPositions(), currentTurn, lastMove);
+    }
+
+
+
+    public void clearBoard() {
+        boardRepository.clearBoard();
+    }
+
     public void printBoard() {
+        System.out.println("   A  B  C  D  E  F  G  H");
         for (int rank = 8; rank >= 1; rank--) {
             System.out.print(rank + " ");
             for (char file = 'A'; file <= 'H'; file++) {
-                Position position = new Position(file + String.valueOf(rank));
-                String piece = boardRepository.getPieceAt(position.toString());
+                Position position = new Position("" + file + rank);
+                String piece = getPieceAt(position); // Use your getPieceAt() method here
                 if (piece != null) {
-                    System.out.print(getPieceSymbol(piece) + " ");
+                    System.out.print(" " + getPieceSymbol(piece) + " ");
                 } else {
-                    System.out.print(". ");
+                    System.out.print(" . "); // Empty square
                 }
             }
+            System.out.println(" " + rank);
         }
-        System.out.println("  A B C D E F G H");
+        System.out.println("   A  B  C  D  E  F  G  H");
     }
 
     private String getPieceSymbol(String piece) {
         switch (piece) {
             case "white pawn": return "P";
-            case "white rook": return "R";
-            case "white knight": return "N";
-            case "white bishop": return "B";
-            case "white queen": return "Q";
-            case "white king": return "K";
             case "black pawn": return "p";
+            case "white rook": return "R";
             case "black rook": return "r";
+            case "white knight": return "N";
             case "black knight": return "n";
+            case "white bishop": return "B";
             case "black bishop": return "b";
+            case "white queen": return "Q";
             case "black queen": return "q";
+            case "white king": return "K";
             case "black king": return "k";
             default: return "?"; // Unknown piece
         }
     }
 
-    public String getPieceAt(Position position) {
-        return boardRepository.getPieceAt(position.toString());
-    }
 
-    public void movePiece(Position from, Position to) {
-        String piece = boardRepository.getPieceAt(from.toString());
-        if (piece != null) {
-            boardRepository.deletePosition(from.toString());
-            boardRepository.savePosition(to.toString(), piece);
-        }
-    }
-
-    public Map<String, String> getAllPositions() {
-        // Retrieve the board state from Redis as a Map
-        return boardRepository.getAllPositions();
-    }
-
-    public List<Position> getAllValidMoves(Position from, String playerColor) {
-        List<Position> validMoves = new ArrayList<>();
-        MoveValidation moveValidator = new MoveValidation(this, gameConfig);
-
-        for (char file = 'A'; file <= 'H'; file++) {
-            for (int rank = 1; rank <= 8; rank++) {
-                Position to = new Position(file + String.valueOf(rank));
-                if (moveValidator.isMoveValid(from, to, playerColor)) {
-                    validMoves.add(to);
-                }
-            }
-        }
-        return validMoves;
-    }
-
-    public boolean simulateMoveAndCheck(Position from, Position to, String playerColor) {
-        // Get current pieces at `from` and `to`
-        String pieceAtFrom = boardRepository.getPieceAt(from.toString());
-        String pieceAtTo = boardRepository.getPieceAt(to.toString());
-
-        // Simulate the move in Redis
-        boardRepository.savePosition(to.toString(), pieceAtFrom);
-        boardRepository.deletePosition(from.toString());
-
-        // Check if the king is in check after the move
-        boolean isKingSafe = !new StateChecker(this, moveValidator).isKingInCheck(playerColor);
-
-        // Undo the simulated move in Redis
-        boardRepository.savePosition(from.toString(), pieceAtFrom);
-        if (pieceAtTo != null) {
-            boardRepository.savePosition(to.toString(), pieceAtTo);
-        } else {
-            boardRepository.deletePosition(to.toString());
-        }
-
-        return isKingSafe;
-    }
 }

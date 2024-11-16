@@ -8,11 +8,41 @@
     {"from": "IN_PROGRESS", "to": "STALEMATE", "on": "stalemate"}
   ],
   "rules": {
-    "pawn": {"moves": [{"direction": "forward", "steps": 1, "initial": false}, {"direction": "forward", "steps": 2, "initial": true}]},
-    "rook": {"moves": [{"direction": "vertical", "steps": "any"}, {"direction": "horizontal", "steps": "any"}]},
-    "knight": {"moves": [{"pattern": "L"}]},
-    "bishop": {"moves": [{"direction": "diagonal", "steps": "any"}]},
-    "queen": {"moves": [{"direction": "vertical", "steps": "any"}, {"direction": "horizontal", "steps": "any"}, {"direction": "diagonal", "steps": "any"}]},
-    "king": {"moves": [{"direction": "vertical", "steps": 1}, {"direction": "horizontal", "steps": 1}, {"direction": "diagonal", "steps": 1}]}
+    "pawn": {
+      "moves": [
+        {"direction": "forward", "steps": 1, "initial": false},
+        {"direction": "forward", "steps": 2, "initial": true}
+      ]
+    },
+    "rook": {
+      "moves": [
+        {"direction": "vertical", "steps": "any"},
+        {"direction": "horizontal", "steps": "any"}
+      ]
+    },
+    "knight": {
+      "moves": [
+        {"pattern": "L"}
+      ]
+    },
+    "bishop": {
+      "moves": [
+        {"direction": "diagonal", "steps": "any"}
+      ]
+    },
+    "queen": {
+      "moves": [
+        {"direction": "vertical", "steps": "any"},
+        {"direction": "horizontal", "steps": "any"},
+        {"direction": "diagonal", "steps": "any"}
+      ]
+    },
+    "king": {
+      "moves": [
+        {"direction": "vertical", "steps": 1},
+        {"direction": "horizontal", "steps": 1},
+        {"direction": "diagonal", "steps": 1}
+      ]
+    }
   }
 }

@@ -4,6 +4,9 @@ import java.io.IOException;
 
 import com.example.chessfsm.chessfsm.model.GameConfig;
 
+/*
+ChessFSM class is responsible for managing the state machine of the chess game.
+ */
 public class ChessFSM {
     private final GameConfig gameConfig;
     private String currentState;

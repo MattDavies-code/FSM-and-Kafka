@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Map;
 
+/*
+    * This class is responsible for saving and retrieving chess piece positions from Redis.
+ */
 @Repository
 public class ChessBoardRepository {
 

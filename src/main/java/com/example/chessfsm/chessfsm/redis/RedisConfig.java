@@ -6,6 +6,9 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+/*
+RedisConfig class is responsible for configuring the Redis template to serialize keys and values as strings.
+ */
 @Configuration
 public class RedisConfig {
 

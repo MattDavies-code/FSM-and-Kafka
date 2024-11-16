@@ -1,7 +1,9 @@
 package com.example.chessfsm.chessfsm.model;
 
 import java.util.Map;
-
+/*
+GameState class represents the current state of the chess game.
+ */
 public class GameState {
     private final String currentState;           // Game state like "IN_PLAY", "CHECK", etc.
     private final Map<String, String> board;     // Map of positions to pieces

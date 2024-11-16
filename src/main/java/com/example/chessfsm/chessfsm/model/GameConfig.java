@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@Configuration
+/*
+GameConfig class is responsible for loading the rules from a JSON rules file.
+ */
 public class GameConfig {
     public List<String> states;
     public List<Transition> transitions;
@@ -25,15 +27,18 @@ public class GameConfig {
     }
 
     public static class Move {
-        public String direction;
-        public int steps;
-        public boolean initial; // For moves allowed only at the initial position
-        public String pattern; // For knight's L-shaped move
+        public String direction; // E.g., "vertical", "diagonal"
+        public String steps;     // Can be "any" or a number as a string
+        public boolean initial;  // True if move is allowed only at initial position (for pawns)
+        public String pattern;   // For special patterns like "L" for knights
     }
 
     public static GameConfig loadConfig(String filePath) throws IOException {
+        System.out.println("Loading GameConfig from: " + filePath);
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(new File(filePath), GameConfig.class);
+        GameConfig config = mapper.readValue(new File(filePath), GameConfig.class);
+        System.out.println("Loaded GameConfig: " + config.rules);
+        return config;
     }
 }
 

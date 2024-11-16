@@ -5,90 +5,61 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
 
+/*
+StateChecker class is responsible for checking if a move changes the state of the game, such as check, checkmate, and stalemate has been reached.
+ */
 @Configuration
 public class StateChecker {
-    private final ChessBoard board;
     private final MoveValidation moveValidator;
 
 
-    public StateChecker(ChessBoard board, MoveValidation moveValidator) {
-        this.board = board;
+    public StateChecker(MoveValidation moveValidator) {
         this.moveValidator = moveValidator;
     }
 
-    public boolean isKingInCheck(String playerColor) {
-        // Locate the king’s position
-        Position kingPosition = findKingPosition(playerColor);
-
+    /**
+     * Checks if the given player's king is in check.
+     *
+     * @param playerColour The colour of the player whose king is being checked.
+     * @return true if the king is in check, false otherwise.
+     */
+    public boolean isKingInCheck(String playerColour, Map<String, String> boardState) {
+        // Find the king's position
+        Position kingPosition = findKingPosition(playerColour, boardState);
         if (kingPosition == null) {
-            // King not found (this shouldn't happen in a valid game)
-            return false;
+            throw new IllegalStateException("King not found for player: " + playerColour);
         }
 
-        // Check if any opposing piece can attack the king’s position
-        return isPositionUnderAttack(kingPosition, opponentColour(playerColor));
-    }
+        // Check if any opponent piece can attack the king's position
+        String opponentColor = opponentColour(playerColour);
+        for (Map.Entry<String, String> entry : boardState.entrySet()) {
+            Position attackerPosition = new Position(entry.getKey());
+            String attackerPiece = entry.getValue();
 
-    public boolean isCheckmate(String playerColor) {
-        // Check if the king is in check and has no valid moves to escape
-        if (!isKingInCheck(playerColor)) {
-            return false;
-        }
-
-        // Check if the player has any valid moves to escape check
-        for (Map.Entry<String, String> entry : board.getAllPositions().entrySet()) {
-            Position from = new Position(entry.getKey()); // Convert String key to Position
-            for (Position to : board.getAllValidMoves(from, playerColor)) {
-                // Simulate move and check if it resolves the check
-                if (board.simulateMoveAndCheck(from, to, playerColor)) {
-                    return false; // There is at least one valid move to escape check
+            // Only look at opponent pieces
+            if (attackerPiece.startsWith(opponentColor)) {
+                if (moveValidator.isMoveValid(attackerPosition, kingPosition, opponentColor, boardState)) {
+                    return true; // King is in check
                 }
             }
         }
-
-        return true; // No valid moves to escape check, so it's checkmate
+        return false; // King is not in check
     }
 
-    public boolean isStalemate(String playerColor) {
-        // If the king is in check, it’s not stalemate
-        if (isKingInCheck(playerColor)) {
-            return false;
-        }
 
-        // Check if the player has no valid moves but is not in check
-        for (Map.Entry<String, String> entry : board.getAllPositions().entrySet()) {
-            Position from = new Position(entry.getKey()); // Convert String key to Position
-            for (Position to : board.getAllValidMoves(from, playerColor)) {
-                if (board.simulateMoveAndCheck(from, to, playerColor)) {
-                    return false; // There is at least one valid move, so it's not stalemate
-                }
+    /**
+     * Finds the position of the king for the specified player.
+     *
+     * @param playerColour The colour of the player whose king is being located.
+     * @return The position of the king, or null if not found.
+     */
+    private Position findKingPosition(String playerColour, Map<String, String> boardState) {
+        for (Map.Entry<String, String> entry : boardState.entrySet()) {
+            if (entry.getValue().equals(playerColour + " king")) {
+                return new Position(entry.getKey());
             }
         }
-
-        return true; // No valid moves and not in check, so it's stalemate
-    }
-
-    private Position findKingPosition(String playerColor) {
-        // Find the king’s position on the board based on player color
-        for (Map.Entry<String, String> entry : board.getAllPositions().entrySet()) {
-            Position position = new Position(entry.getKey()); // Convert String key to Position
-            String piece = entry.getValue();
-            if (piece != null && piece.equals(playerColor + " king")) {
-                return position;
-            }
-        }
-        return null; // King not found (shouldn't happen in a valid game)
-    }
-
-    private boolean isPositionUnderAttack(Position position, String opponentColour) {
-        // Check if the given position is under attack by any piece of the opponentColor
-        for (Map.Entry<String, String> entry : board.getAllPositions().entrySet()) {
-            Position attacker = new Position(entry.getKey()); // Convert String key to Position
-            if (moveValidator.isMoveValid(attacker, position, opponentColour)) {
-                return true;
-            }
-        }
-        return false;
+        return null; // King not found
     }
 
     public String opponentColour(String color) {

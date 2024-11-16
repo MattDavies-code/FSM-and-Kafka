@@ -1,0 +1,36 @@
+1. cd to start of C: drive then into kafka
+
+2. Start zookeeper:
+bin\windows\zookeeper-server-start.bat config\zookeeper.properties
+
+3. Setup broker:
+bin\windows\kafka-server-start.bat config\server.properties
+
+Create topic (not needed):
+bin\windows\kafka-topics.bat --create --topic chess-moves --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+4. Start Producer:
+bin\windows\kafka-console-producer.bat --broker-list localhost:9092 --topic chess-moves
+
+5. Start docker and redis
+
+6. Start Application
+
+7. In Producer, send message: {"player": "white", "from": "A2", "to": "A4"}
+
+See output.
+
+8. In Producer, send message: {"player": "white", "from": "A2", "to": "B4"}
+9. {"player": "white", "from": "B2", "to": "A2"}
+
+Can also do this in command prompt: curl -X POST http://localhost:8080/chess/move ^
+                                         -H "Content-Type: application/json" ^
+                                         -d "{\"player\":\"white\",\"from\":\"A2\",\"to\":\"A4\"}"
+
+
+
+Vertical Cut:
+1.
+
+
+{"piece":null,"from":"A2","to":"A4"}} - should be pawn
