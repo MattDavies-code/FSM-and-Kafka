@@ -1,17 +1,12 @@
 package com.example.chessfsm.chessfsm.fsm;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
-import com.example.chessfsm.chessfsm.model.GameConfig;
+import org.springframework.stereotype.Component;
+
 import com.example.chessfsm.chessfsm.model.GameState;
 import com.example.chessfsm.chessfsm.model.Position;
 import com.example.chessfsm.chessfsm.service.ChessBoardRepository;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
 /**
 ChessBoard class is responsible for managing the state of the chess board.

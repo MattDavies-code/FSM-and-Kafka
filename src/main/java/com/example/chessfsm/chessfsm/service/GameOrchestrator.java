@@ -1,5 +1,9 @@
 package com.example.chessfsm.chessfsm.service;
 
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
 import com.example.chessfsm.chessfsm.fsm.ChessBoard;
 import com.example.chessfsm.chessfsm.fsm.ChessFSM;
 import com.example.chessfsm.chessfsm.fsm.MoveValidation;
@@ -7,13 +11,10 @@ import com.example.chessfsm.chessfsm.fsm.StateChecker;
 import com.example.chessfsm.chessfsm.kafka.ChessKafkaProducer;
 import com.example.chessfsm.chessfsm.model.GameState;
 import com.example.chessfsm.chessfsm.model.Position;
-import jakarta.annotation.PostConstruct;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.Map;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class GameOrchestrator {
@@ -73,8 +74,8 @@ public class GameOrchestrator {
         }
     }
 
-    private void handleGameConditions(String playerColor, Position from, Position to) throws Exception {
-        String opponentColour = stateChecker.opponentColour(playerColor);
+    private void handleGameConditions(String playerColour, Position from, Position to) throws Exception {
+        String opponentColour = stateChecker.opponentColour(playerColour);
 
         // GAME START
         if (fsm.getCurrentState().equals("START")) {
@@ -86,14 +87,14 @@ public class GameOrchestrator {
 //            System.out.println("Check on " + opponentColour + "'s king.");
 //        }
 
-        sendGameState(playerColor, from, to);
+        sendGameState(playerColour, from, to);
     }
 
-    private void sendGameState(String playerColor, Position from, Position to) throws Exception {
+    private void sendGameState(String playerColour, Position from, Position to) throws Exception {
         // Generate and log the game state JSON
         String currentState = fsm.getCurrentState();
         Map<String, String> boardState = chessBoard.getAllPositions();
-        String nextTurn = stateChecker.opponentColour(playerColor);
+        String nextTurn = stateChecker.opponentColour(playerColour);
 
         GameState.LastMove lastMove = new GameState.LastMove(chessBoard.getPieceAt(to), from.toString(), to.toString());
         GameState gameState = new GameState(currentState, boardState, nextTurn, lastMove);
