@@ -7,42 +7,52 @@
     {"from": "IN_PROGRESS", "to": "CHECKMATE", "on": "checkmate"},
     {"from": "IN_PROGRESS", "to": "STALEMATE", "on": "stalemate"}
   ],
+  "generalRules": {
+    "startingPlayer": "white"
+  },
   "rules": {
     "pawn": {
       "moves": [
         {"direction": "forward", "steps": 1, "initial": false},
-        {"direction": "forward", "steps": 2, "initial": true}
-      ]
+        {"direction": "forward", "steps": 2, "initial": true},
+        {"direction": "diagonal", "steps": 1, "capture": true}
+      ],
+      "points": 1
     },
     "rook": {
       "moves": [
         {"direction": "vertical", "steps": "any"},
         {"direction": "horizontal", "steps": "any"}
-      ]
+      ],
+      "points": 5
     },
     "knight": {
       "moves": [
         {"pattern": "L"}
-      ]
+      ],
+      "points": 3
     },
     "bishop": {
       "moves": [
         {"direction": "diagonal", "steps": "any"}
-      ]
+      ],
+      "points": 3
     },
     "queen": {
       "moves": [
         {"direction": "vertical", "steps": "any"},
         {"direction": "horizontal", "steps": "any"},
         {"direction": "diagonal", "steps": "any"}
-      ]
+      ],
+      "points": 9
     },
     "king": {
       "moves": [
         {"direction": "vertical", "steps": 1},
         {"direction": "horizontal", "steps": 1},
         {"direction": "diagonal", "steps": 1}
-      ]
+      ],
+      "points": 0
     }
   }
 }

@@ -25,4 +25,10 @@ public class ChessKafkaProducer {
         kafkaTemplate.send(topic, message);
         System.out.println("Sent message: " + message + " to topic: " + topic);
     }
+
+    public void sendCaptureDetail(String message) {
+        String topic = "capture-details"; // Define the topic name for captures
+        kafkaTemplate.send(topic, message);
+        System.out.println("Capture details sent to topic: " + topic + " Message: " + message);
+    }
 }

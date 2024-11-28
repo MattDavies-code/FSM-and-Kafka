@@ -1,13 +1,13 @@
 package com.example.chessfsm.chessfsm.fsm;
 
-import com.example.chessfsm.chessfsm.model.GameConfig;
-import com.example.chessfsm.chessfsm.model.Position;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.example.chessfsm.chessfsm.model.GameConfig;
+import com.example.chessfsm.chessfsm.model.Position;
 
 /*
 * This class is responsible for validating if a move from one position to another is allowed for the piece type.
@@ -37,18 +37,24 @@ public class MoveValidation {
      */
      public boolean isMoveValid(Position from, Position to, String playerColor, Map<String, String> boardState) {
         String piece = boardState.get(from.toString());
+        
         if (piece == null || !piece.startsWith(playerColor)) {
             return false; // No piece at the starting position or piece doesn't belong to the player
         }
 
         // Extract piece type (e.g., "pawn", "rook")
         String pieceType = piece.split(" ")[1];
+        
 
         // Retrieve piece rules from GameConfig
         GameConfig.PieceRules pieceRules = gameConfig.rules.get(pieceType);
         if (pieceRules == null) {
             return false; // No rules defined for this piece type
         }
+        System.out.println("Piece at " + from + ": " + piece);
+        System.out.println("Piece type: " + pieceType);
+        System.out.println("Player color: " + playerColor);
+
 
          for (GameConfig.Move rule : pieceRules.moves) {
              if (isValidBasedOnRule(rule, from, to, playerColor, boardState, pieceType)) {
@@ -62,27 +68,46 @@ public class MoveValidation {
 
     private boolean isValidBasedOnRule(GameConfig.Move rule, Position from, Position to, String playerColor,
                                        Map<String, String> boardState, String pieceType) {
+
+        // Ensure the move does not target a square occupied by the player's own piece
+        String targetPiece = boardState.get(to.toString());
+        if (targetPiece != null && targetPiece.startsWith(playerColor)) {
+            return false; // Cannot capture your own piece
+        }
+
         String direction = rule.direction; // Read direction dynamically from rules.json
 
+        System.out.println("Processing rule: " + rule);
+        System.out.println("Rule pattern: " + rule.pattern);
+        System.out.println("--------------------");
+
+        // Special handling for knights and other non-directional pieces
+        if ("L".equals(rule.pattern)) {
+            System.out.println("Processing knight rule: " + rule);
+            return validateKnightMove(rule, from, to);
+        }
+
         switch (direction) {
-            case "forward":
+            case "forward" -> {
                 return validatePawnMove(rule, from, to, playerColor, boardState);
-            case "vertical":
-            case "horizontal":
-            case "diagonal":
+            }
+            case "vertical", "horizontal", "diagonal" -> {
                 return validatePath(from, to, boardState); // Directly call validatePath
-            default:
-                // Handle special cases like "L" for knights
+            }
+            default -> {
+                System.out.println(rule.pattern);
                 if ("L".equals(rule.pattern)) {
+                    System.out.println("Processing knight rule: " + rule);
                     return validateKnightMove(rule, from, to);
                 }
-
-                // Special case for king
+        
+                //Special case for king
                 if ("king".equals(pieceType)) {
                     return validateKingMove(rule, from, to, playerColor, boardState, new StateChecker(MoveValidation.this));
                 }
-
+        
                 return false; // Unsupported direction
+            }
         }
     }
 
@@ -117,6 +142,14 @@ public class MoveValidation {
             }
         }
 
+        // Check diagonal capturing
+        if (rule.direction.equals("diagonal") && Math.abs(toFile - fromFile) == 1 && toRank == fromRank + direction) {
+            String targetPiece = boardState.get(to.toString());
+            if (targetPiece != null && !targetPiece.startsWith(playerColor)) {
+                return true; // Capture is valid if an opponent's piece is present
+            }
+        }
+
         return false; // Invalid move for this rule
     }
 
@@ -146,7 +179,9 @@ public class MoveValidation {
             file += (char) fileStep;
         }
 
-        return true; // Path is clear
+        // Check the destination square
+        String targetPiece = boardState.get(to.toString());
+        return targetPiece == null || !targetPiece.startsWith(boardState.get(from.toString()).split(" ")[0]);
     }
 
     private boolean validateHorizontalPath(Position from, Position to, Map<String, String> boardState) {
@@ -165,7 +200,9 @@ public class MoveValidation {
             }
         }
 
-        return true; // Path is clear
+        // Check the destination square
+        String targetPiece = boardState.get(to.toString());
+        return targetPiece == null || !targetPiece.startsWith(boardState.get(from.toString()).split(" ")[0]);
     }
 
     private boolean validateVerticalPath(Position from, Position to, Map<String, String> boardState) {
@@ -184,14 +221,25 @@ public class MoveValidation {
             }
         }
 
-        return true; // Path is clear
+        // Check the destination square
+        String targetPiece = boardState.get(to.toString());
+        return targetPiece == null || !targetPiece.startsWith(boardState.get(from.toString()).split(" ")[0]);
     }
 
     private boolean validateKnightMove(GameConfig.Move rule, Position from, Position to) {
         int rankDifference = Math.abs(from.getRank() - to.getRank());
         int fileDifference = Math.abs(from.getFile() - to.getFile());
-
-        return rule.pattern.equals("L") && ((rankDifference == 2 && fileDifference == 1) || (rankDifference == 1 && fileDifference == 2));
+    
+        System.out.println("Validating Knight Move:");
+        System.out.println("From: " + from + ", To: " + to);
+        System.out.println("Rank Difference: " + rankDifference + ", File Difference: " + fileDifference);
+    
+        boolean isValid = rule.pattern.equals("L") && 
+                          ((rankDifference == 2 && fileDifference == 1) || 
+                           (rankDifference == 1 && fileDifference == 2));
+        
+        System.out.println("Is Valid: " + isValid);
+        return isValid;
     }
 
     private boolean validateKingMove(GameConfig.Move rule, Position from, Position to, String playerColor,
@@ -256,8 +304,8 @@ public class MoveValidation {
             return validateDiagonalPath(from, to, boardState);
         }
 
-        return false; // Invalid path for the given direction
-    }
+            return false; // Invalid path for the given direction
+        }
 
 
     /**

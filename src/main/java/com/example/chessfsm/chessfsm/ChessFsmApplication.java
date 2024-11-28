@@ -1,16 +1,14 @@
 package com.example.chessfsm.chessfsm;
 
-import com.example.chessfsm.chessfsm.fsm.ChessBoard;
-import com.example.chessfsm.chessfsm.fsm.ChessFSM;
-import com.example.chessfsm.chessfsm.fsm.MoveValidation;
-import com.example.chessfsm.chessfsm.model.GameConfig;
-import com.example.chessfsm.chessfsm.service.ChessBoardRepository;
+import java.io.IOException;
+import java.util.Objects;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.io.IOException;
-import java.util.Objects;
+import com.example.chessfsm.chessfsm.fsm.ChessFSM;
+import com.example.chessfsm.chessfsm.model.GameConfig;
 
 /*
 ChessFsmApplication class is the entry point of the application.

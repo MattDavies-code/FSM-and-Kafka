@@ -15,13 +15,11 @@ ChessBoard class is responsible for managing the state of the chess board.
 public class ChessBoard {
 
     private final ChessBoardRepository boardRepository;
-    private final ChessFSM fsm;
     private int moveCount; // Keeps track of the total number of moves made
     private GameState.LastMove lastMove; // Stores details of the last move made
 
     public ChessBoard(ChessBoardRepository boardRepository, ChessFSM fsm) {
         this.boardRepository = boardRepository;
-        this.fsm = fsm;
 
     }
     public void initializeBoard() {
@@ -68,11 +66,20 @@ public class ChessBoard {
      * Move a piece from one position to another.
      */
     public void movePiece(Position from, Position to) {
-        String piece = boardRepository.getPieceAt(from.toString());
-        if (piece != null) {
-            System.out.println("Moving piece: " + piece + " from " + from + " to " + to);
+        String movingPiece = boardRepository.getPieceAt(from.toString());
+        if (movingPiece != null) {
+            System.out.println("Moving piece: " + movingPiece + " from " + from + " to " + to);
+    
+            // Check if the destination has an opponent's piece
+            String capturedPiece = boardRepository.getPieceAt(to.toString());
+            if (capturedPiece != null) {
+                System.out.println("Captured piece: " + capturedPiece + " at " + to);
+                // Caputered pieces kafka here or points tally stuff
+            }
+    
+            // Update the board state
             boardRepository.deletePosition(from.toString()); // Clear the old position
-            boardRepository.savePosition(to.toString(), piece); // Place the piece in the new position
+            boardRepository.savePosition(to.toString(), movingPiece); // Place the piece in the new position
         } else {
             System.err.println("No piece found at " + from);
         }
@@ -127,21 +134,21 @@ public class ChessBoard {
     }
 
     private String getPieceSymbol(String piece) {
-        switch (piece) {
-            case "white pawn": return "P";
-            case "black pawn": return "p";
-            case "white rook": return "R";
-            case "black rook": return "r";
-            case "white knight": return "N";
-            case "black knight": return "n";
-            case "white bishop": return "B";
-            case "black bishop": return "b";
-            case "white queen": return "Q";
-            case "black queen": return "q";
-            case "white king": return "K";
-            case "black king": return "k";
-            default: return "?"; // Unknown piece
-        }
+        return switch (piece) {
+            case "white pawn" -> "P";
+            case "black pawn" -> "p";
+            case "white rook" -> "R";
+            case "black rook" -> "r";
+            case "white knight" -> "N";
+            case "black knight" -> "n";
+            case "white bishop" -> "B";
+            case "black bishop" -> "b";
+            case "white queen" -> "Q";
+            case "black queen" -> "q";
+            case "white king" -> "K";
+            case "black king" -> "k";
+            default -> "?"; // Unknown piece
+        }; 
     }
 
 
